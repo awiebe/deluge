@@ -1178,6 +1178,11 @@ class TorrentManager(component.Component):
 
         if torrent_id in self.waiting_on_finish_moving:
             self.waiting_on_finish_moving.remove(torrent_id)
+            if torrent.probing_move_completed_path:
+              torrent.probed_move_completed_path=True
+              torrent.probing_move_completed_path=False
+              torrent.move_completed_path_occupied=False
+              return
             torrent.is_finished = True
             component.get('EventManager').emit(TorrentFinishedEvent(torrent_id))
 
@@ -1188,7 +1193,12 @@ class TorrentManager(component.Component):
             torrent = self.torrents[torrent_id]
         except (RuntimeError, KeyError):
             return
-
+        
+        if torrent.probing_move_completed_path:
+          torrent.probed_move_completed_path=True
+          torrent.probing_move_completed_path=False
+          torrent.move_completed_path_occupied=True
+        
         log.warning('on_alert_storage_moved_failed: %s', decode_bytes(alert.message()))
         # Set an Error message and pause the torrent
         alert_msg = decode_bytes(alert.message()).split(':', 1)[1].strip()
