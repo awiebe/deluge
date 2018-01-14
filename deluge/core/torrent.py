@@ -274,6 +274,10 @@ class Torrent(object):
         self._create_status_funcs()
         self.set_options(self.options)
         self.update_state()
+        
+        self.probed_move_completed_path=False
+        self.probing_move_completed_path=False
+        self.move_completed_path_occupied=False
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug('Torrent object created.')
@@ -1264,6 +1268,13 @@ class Torrent(object):
             self.forcing_recheck_paused = self.status.paused
 
         try:
+            if not self.probed_move_completed_path:
+                self.probing_move_completed_path=True
+                self.move_completed_path_occupied=False
+                self.handle.move_storage(self.options.move_completed_path,flags=1)
+                return
+            elif self.move_completed_path_occupied:
+                self.handle.move_storage(self.options.move_completed_path,flags=2)
             self.handle.force_recheck()
             self.handle.resume()
             self.forcing_recheck = True
